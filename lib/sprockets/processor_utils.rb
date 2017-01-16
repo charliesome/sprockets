@@ -107,8 +107,7 @@ module Sprockets
     VALID_METADATA_VALUE_TYPES = Set.new([
       String,
       Symbol,
-      Fixnum,
-      Bignum,
+      *(RUBY_VERSION >= "2.4.0" ? [Integer] : [Fixnum, Bignum]),
       TrueClass,
       FalseClass,
       NilClass
