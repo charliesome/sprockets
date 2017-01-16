@@ -55,10 +55,32 @@ module Sprockets
         elsif klass == Symbol
           digest << 'Symbol'
           digest << obj.to_s
-        elsif klass == Fixnum
+        elsif RUBY_VERSION >= "2.4.0" && klass == Integer
+          # Ruby 2.4 unifies Fixnum and Bignum into a single Integer class.
+          #
+          # It's probably important that digests don't change across Ruby
+          # versions, so we need to make sure we still calculate the digest
+          # the same way that we would have under Ruby 2.3
+          #
+          # Despite T_FIXNUMs and T_BIGNUMs sharing the Integer class in Ruby
+          # 2.4, it's still possible to tell them apart by their object_id.
+          #
+          # T_FIXNUMs are represented as a tagged pointer value, and always
+          # have the least significant bit of their object_id set.
+          #
+          # T_BIGNUMs are allocated on the heap and will always have the lower
+          # few bits of their object_id clear.
+          #
+          if obj.object_id.odd?
+            digest << "Fixnum"
+          else
+            digest << "Bignum"
+          end
+          digest << obj.to_s
+        elsif RUBY_VERSION < "2.4.0" && klass == Fixnum
           digest << 'Fixnum'
           digest << obj.to_s
-        elsif klass == Bignum
+        elsif RUBY_VERSION < "2.4.0" && klass == Bignum
           digest << 'Bignum'
           digest << obj.to_s
         elsif klass == TrueClass
